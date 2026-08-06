@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Controle de Parcelamentos - Emagrecentro</title>
+<meta name="theme-color" content="#0F6B67">
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --teal-900:#083D3B;
+    --teal-800:#0F6B67;
+    --teal-700:#137973;
+    --teal-100:#E6F2F1;
+    --teal-50:#F3FAF9;
+    --gold-600:#B8860B;
+    --gold-500:#D4AF37;
+    --gold-100:#FBF3DA;
+    --red-600:#C0392B;
+    --red-100:#FBE9E7;
+    --amber-600:#B7791F;
+    --amber-100:#FFF4DE;
+    --green-600:#1E8449;
+    --green-100:#E7F7EE;
+    --ink:#1E2A2A;
+    --ink-soft:#5B6B6A;
+    --line:#DDE7E6;
+    --bg:#F6F9F8;
+    --card:#FFFFFF;
+    --radius:14px;
+    --shadow:0 2px 10px rgba(8,61,59,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);}
+  header{
+    background:linear-gradient(135deg,var(--teal-900),var(--teal-800));
+    color:#fff;padding:18px 20px 22px;position:sticky;top:0;z-index:20;
+    box-shadow:0 4px 14px rgba(0,0,0,0.15);
+  }
+  header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.2px;}
+  header p{margin:2px 0 0;font-size:12.5px;color:var(--gold-100);opacity:.9;}
+
+  .tabs{display:flex;gap:8px;margin-top:16px;background:rgba(255,255,255,0.12);padding:4px;border-radius:12px;}
+  .tab{flex:1;text-align:center;padding:9px 6px;border-radius:9px;font-size:13.5px;font-weight:600;color:#EAF6F4;cursor:pointer;transition:.15s;user-select:none;}
+  .tab.active{background:#fff;color:var(--teal-900);}
+
+  main{max-width:720px;margin:0 auto;padding:16px 14px 100px;}
+
+  .summary-row{display:flex;gap:10px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+  .sum-card{flex:1;min-width:100px;background:var(--card);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border-top:3px solid var(--teal-700);}
+  .sum-card.red{border-top-color:var(--red-600);}
+  .sum-card.amber{border-top-color:var(--amber-600);}
+  .sum-card .n{font-size:20px;font-weight:800;color:var(--teal-900);}
+  .sum-card.red .n{color:var(--red-600);}
+  .sum-card.amber .n{color:var(--amber-600);}
+  .sum-card .l{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+  .date-nav{display:flex;align-items:center;justify-content:space-between;background:var(--card);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow);margin-bottom:14px;}
+  .date-nav button{background:var(--teal-100);border:none;color:var(--teal-900);width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer;font-weight:700;}
+  .date-nav .cur{text-align:center;flex:1;}
+  .date-nav .cur .d1{font-weight:700;font-size:15px;text-transform:capitalize;}
+  .date-nav .cur .d2{font-size:11.5px;color:var(--ink-soft);}
+  .date-nav .today-btn{background:var(--gold-100);color:var(--gold-600);border:none;padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;margin-left:6px;}
+
+  .search{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;font-size:14px;background:var(--card);}
+  .search:focus{outline:none;border-color:var(--teal-700);}
+
+  .section-label{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin:16px 4px 8px;}
+
+  .pcard{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--teal-700);}
+  .pcard.overdue{border-left-color:var(--red-600);}
+  .pcard.today{border-left-color:var(--gold-600);}
+  .pcard.paid{border-left-color:var(--green-600);opacity:.75;}
+  .pcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .pcard-name{font-weight:700;font-size:15px;color:var(--teal-900);}
+  .pcard-sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .pcard-value{font-weight:800;font-size:15px;color:var(--teal-900);white-space:nowrap;}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:6px;}
+  .badge.overdue{background:var(--red-100);color:var(--red-600);}
+  .badge.today{background:var(--gold-100);color:var(--gold-600);}
+  .badge.upcoming{background:var(--teal-100);color:var(--teal-800);}
+  .badge.paid{background:var(--green-100);color:var(--green-600);}
+  .pcard-actions{display:flex;gap:8px;margin-top:12px;}
+  .pcard-actions button{flex:1;padding:9px 8px;border-radius:9px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .btn-wpp{background:#25D366;color:#fff;}
+  .btn-pay{background:var(--teal-800);color:#fff;}
+  .btn-pay.done{background:var(--green-100);color:var(--green-600);}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+  .empty .ic{font-size:38px;margin-bottom:10px;}
+
+  .fab{position:fixed;bottom:22px;right:20px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold-600),var(--gold-500));color:#fff;border:none;font-size:28px;box-shadow:0 6px 16px rgba(184,134,11,0.4);cursor:pointer;z-index:15;display:flex;align-items:center;justify-content:center;}
+
+  .plist-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;}
+  .plist-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px;}
+  .plist-head .l{flex:1;}
+  .plist-head .name{font-weight:700;font-size:15px;color:var(--teal-900);}
+  .plist-head .meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .plist-progress{height:6px;background:var(--teal-100);border-radius:6px;margin-top:8px;overflow:hidden;}
+  .plist-progress i{display:block;height:100%;background:var(--teal-700);}
+  .chev{color:var(--teal-700);font-size:13px;}
+  .plist-body{display:none;padding:0 16px 14px;border-top:1px solid var(--line);}
+  .plist-body.open{display:block;}
+  .parcela-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px;gap:8px;}
+  .parcela-row:last-child{border-bottom:none;}
+  .parcela-row .pn{color:var(--ink-soft);}
+  .parcela-row .pv{font-weight:700;white-space:nowrap;}
+  .parcela-row .actions{display:flex;gap:6px;align-items:center;}
+  .mini-btn{border:none;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;}
+  .mini-btn.wpp{background:#25D366;color:#fff;}
+  .mini-btn.pay{background:var(--teal-100);color:var(--teal-800);}
+  .mini-btn.pay.done{background:var(--green-100);color:var(--green-600);}
+  .mini-btn.del{background:var(--red-100);color:var(--red-600);}
+  .plist-actions{display:flex;gap:8px;margin-top:10px;}
+  .plist-actions button{flex:1;padding:8px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;}
+  .btn-edit{background:var(--teal-100);color:var(--teal-800);}
+  .btn-del{background:var(--red-100);color:var(--red-600);}
+  .btn-addparc{background:var(--gold-100);color:var(--gold-600);width:100%;margin-top:10px;padding:9px;border:none;border-radius:9px;font-weight:700;font-size:12.5px;cursor:pointer;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(8,20,20,0.55);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .modal-bg.open{display:flex;}
+  .modal{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;padding:20px 20px 26px;position:relative;}
+  @media(min-width:560px){.modal-bg{align-items:center;}.modal{border-radius:18px;}}
+  .modal h2{margin:0 0 16px;font-size:17px;color:var(--teal-900);}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;}
+  .field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--teal-50);}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--teal-700);}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .modal-actions button{flex:1;padding:12px;border-radius:11px;border:none;font-weight:700;font-size:14px;cursor:pointer;}
+  .btn-cancel{background:var(--teal-100);color:var(--teal-800);}
+  .btn-save{background:var(--teal-800);color:#fff;}
+  .close-x{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;}
+
+  .parcelas-editor{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;background:var(--teal-50);}
+  .parcela-edit-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .parcela-edit-row .idx{width:22px;font-size:12px;font-weight:700;color:var(--ink-soft);flex:0 0 auto;}
+  .parcela-edit-row input[type=date]{flex:1.3;}
+  .parcela-edit-row input[type=number]{flex:1;}
+  .parcela-edit-row input{padding:8px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px;}
+  .parcela-edit-row .rm{background:var(--red-100);color:var(--red-600);border:none;border-radius:8px;width:30px;height:30px;font-size:14px;cursor:pointer;flex:0 0 auto;}
+  .add-row-btn{background:var(--teal-100);color:var(--teal-800);border:none;border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:700;cursor:pointer;width:100%;}
+  .hint{font-size:11px;color:var(--ink-soft);margin-top:4px;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--teal-900);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:100;opacity:0;pointer-events:none;transition:.25s;}
+  .toast.show{opacity:1;bottom:34px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💰 Controle de Parcelamentos</h1>
+  <p>Emagrecentro Araruama · funciona direto no aparelho</p>
+  <div class="tabs">
+    <div class="tab active" data-tab="data" onclick="switchTab('data')">📅 Por Data</div>
+    <div class="tab" data-tab="paciente" onclick="switchTab('paciente')">👤 Por Paciente</div>
+  </div>
+</header>
+
+<main>
+
+  <div id="tab-data">
+    <div class="summary-row">
+      <div class="sum-card red"><div class="n" id="sumAtrasados">0</div><div class="l">Atrasados</div></div>
+      <div class="sum-card amber"><div class="n" id="sumHoje">0</div><div class="l">Vencem hoje</div></div>
+      <div class="sum-card"><div class="n" id="sumProximos">0</div><div class="l">Próx. 7 dias</div></div>
+    </div>
+
+    <div class="date-nav">
+      <button onclick="mudarDia(-1)">‹</button>
+      <div class="cur">
+        <div class="d1" id="dataAtualLabel">Hoje</div>
+        <div class="d2" id="dataAtualSub"></div>
+      </div>
+      <button onclick="mudarDia(1)">›</button>
+      <button class="today-btn" onclick="irParaHoje()">Hoje</button>
+    </div>
+
+    <div id="listaAtrasados"></div>
+    <div id="listaDoDia"></div>
+  </div>
+
+  <div id="tab-paciente" style="display:none;">
+    <input class="search" id="buscaPaciente" placeholder="🔎 Buscar paciente..." oninput="renderPacientes()">
+    <div id="listaPacientes"></div>
+  </div>
+
+</main>
+
+<button class="fab" onclick="abrirModalNovo()">+</button>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="close-x" onclick="fecharModal()">✕</button>
+    <h2 id="modalTitulo">Novo parcelamento</h2>
+    <div class="field">
+      <label>Nome do paciente</label>
+      <input type="text" id="fNome" placeholder="Nome completo">
+    </div>
+    <div class="field">
+      <label>WhatsApp (com DDD)</label>
+      <input type="text" id="fTelefone" placeholder="22 99999-9999">
+    </div>
+    <div class="field">
+      <label>Tratamento / observação</label>
+      <input type="text" id="fTratamento" placeholder="Ex: Protocolo Speed">
+    </div>
+
+    <label style="display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;">Parcelas — coloque o dia certinho que o paciente costuma vir</label>
+    <div class="parcelas-editor" id="parcelasEditor"></div>
+    <button class="add-row-btn" onclick="addParcelaRow()">+ Adicionar parcela</button>
+    <div class="hint">Cada parcela pode ter uma data diferente, do jeito que o paciente realmente costuma aparecer na clínica.</div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" onclick="salvarPaciente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   App 100% local — salva no navegador do próprio aparelho
+   (mesma lógica do primeiro app de estoque). Não precisa de
+   internet nem de Firebase para funcionar.
+   ========================================================= */
+
+const STORAGE_KEY = 'emagrecentro_parcelamentos_v1';
+let pacientes = [];
+let dataAtual = new Date();
+dataAtual.setHours(0,0,0,0);
+
+/* ---------- util ---------- */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function fmtMoeda(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fmtData(d){ return d.toLocaleDateString('pt-BR'); }
+function fmtDataLonga(d){ return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); }
+function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function toISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function mesmoDia(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ---------- storage local ---------- */
+function salvarLocal(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pacientes));
+}
+function carregarLocal(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  pacientes = raw ? JSON.parse(raw) : [];
+}
+
+/* ---------- editor de parcelas no modal ---------- */
+let parcelaRows = []; // {numero, vencimento, valor, pago, dataPagamento}
+function addParcelaRow(vencimento, valor, pago, dataPagamento){
+  parcelaRows.push({
+    numero: parcelaRows.length+1,
+    vencimento: vencimento || '',
+    valor: valor!==undefined ? valor : '',
+    pago: pago||false,
+    dataPagamento: dataPagamento||null
+  });
+  renderParcelasEditor();
+}
+function removerParcelaRow(idx){
+  parcelaRows.splice(idx,1);
+  parcelaRows.forEach((p,i)=>p.numero=i+1);
+  renderParcelasEditor();
+}
+function renderParcelasEditor(){
+  const el = document.getElementById('parcelasEditor');
+  if(!parcelaRows.length){
+    el.innerHTML = `<div class="hint" style="margin:4px 0 8px;">Nenhuma parcela ainda. Toque em "+ Adicionar parcela".</div>`;
+    return;
+  }
+  el.innerHTML = parcelaRows.map((p,i)=>`
+    <div class="parcela-edit-row">
+      <div class="idx">${i+1}ª</div>
+      <input type="date" value="${p.vencimento}" onchange="parcelaRows[${i}].vencimento=this.value">
+      <input type="number" step="0.01" placeholder="Valor" value="${p.valor}" onchange="parcelaRows[${i}].valor=parseFloat(this.value)||0">
+      <button class="rm" onclick="removerParcelaRow(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+/* ---------- modal ---------- */
+let editandoId = null;
+function abrirModalNovo(){
+  editandoId = null;
+  document.getElementById('modalTitulo').textContent = 'Novo parcelamento';
+  document.getElementById('fNome').value='';
+  document.getElementById('fTelefone').value='';
+  document.getElementById('fTratamento').value='';
+  parcelaRows = [];
+  addParcelaRow(toISO(new Date()));
+  renderParcelasEditor();
+  document.getElementById('modalBg').classList.add('open');
+}
+function abrirModalEditar(id){
+  const p = pacientes.find(x=>x.id===id);
+  if(!p) return;
+  editandoId = id;
+  document.getElementById('modalTitulo').textContent = 'Editar parcelamento';
+  document.getElementById('fNome').value=p.nome;
+  document.getElementById('fTelefone').value=p.telefone||'';
+  document.getElementById('fTratamento').value=p.tratamento||'';
+  parcelaRows = p.parcelas.map(x=>({...x}));
+  renderParcelasEditor();
+  document.getElementById('modalBg').classList.add('open');
+}
+function fecharModal(){
+  document.getElementById('modalBg').classList.remove('open');
+}
+function salvarPaciente(){
+  const nome = document.getElementById('fNome').value.trim();
+  const telefone = document.getElementById('fTelefone').value.trim();
+  const tratamento = document.getElementById('fTratamento').value.trim();
+
+  const parcelasValidas = parcelaRows.filter(p=>p.vencimento && p.valor);
+  if(!nome || !parcelasValidas.length){
+    showToast('Preencha o nome e ao menos 1 parcela com data e valor');
+    return;
+  }
+  parcelasValidas.forEach((p,i)=>p.numero=i+1);
+
+  if(editandoId){
+    const p = pacientes.find(x=>x.id===editandoId);
+    p.nome=nome; p.telefone=telefone; p.tratamento=tratamento;
+    p.parcelas = parcelasValidas;
+  } else {
+    pacientes.push({
+      id: uid(),
+      nome, telefone, tratamento,
+      parcelas: parcelasValidas
+    });
+  }
+  salvarLocal();
+  renderTudo();
+  fecharModal();
+  showToast('Parcelamento salvo');
+}
+function excluirPaciente(id){
+  if(!confirm('Excluir este parcelamento? Essa ação não pode ser desfeita.')) return;
+  pacientes = pacientes.filter(p=>p.id!==id);
+  salvarLocal();
+  renderTudo();
+  showToast('Excluído');
+}
+
+/* ---------- marcar pago ---------- */
+function marcarPago(pacienteId, numero){
+  const p = pacientes.find(x=>x.id===pacienteId);
+  if(!p) return;
+  const parc = p.parcelas.find(x=>x.numero===numero);
+  parc.pago = !parc.pago;
+  parc.dataPagamento = parc.pago ? toISO(new Date()) : null;
+  salvarLocal();
+  renderTudo();
+  showToast(parc.pago ? 'Marcado como pago' : 'Marcado como pendente');
+}
+
+/* ---------- whatsapp ---------- */
+function enviarWhatsapp(pacienteId, numero){
+  const p = pacientes.find(x=>x.id===pacienteId);
+  const parcela = p.parcelas.find(x=>x.numero===numero);
+  const tel = (p.telefone||'').replace(/\D/g,'');
+  if(!tel){ showToast('Cadastre o WhatsApp deste paciente'); return; }
+  const telFmt = tel.length<=11 ? '55'+tel : tel;
+  const venc = fmtData(parseISO(parcela.vencimento));
+  const msg = `Olá, ${p.nome.split(' ')[0]}! 😊 Passando para lembrar que a parcela nº ${parcela.numero} (${fmtMoeda(parcela.valor)}) do seu tratamento na Emagrecentro Araruama vence em ${venc}. Podemos combinar o pagamento na sua próxima visita? Qualquer dúvida estamos à disposição! 💚`;
+  const url = `https://wa.me/${telFmt}?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+}
+
+/* ---------- navegação de data ---------- */
+function mudarDia(delta){
+  dataAtual.setDate(dataAtual.getDate()+delta);
+  renderPorData();
+}
+function irParaHoje(){
+  dataAtual = new Date(); dataAtual.setHours(0,0,0,0);
+  renderPorData();
+}
+
+/* ---------- tabs ---------- */
+function switchTab(nome){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===nome));
+  document.getElementById('tab-data').style.display = nome==='data' ? 'block':'none';
+  document.getElementById('tab-paciente').style.display = nome==='paciente' ? 'block':'none';
+  renderTudo();
+}
+
+/* ---------- helpers de status ---------- */
+function todasParcelas(){
+  const out=[];
+  pacientes.forEach(p=>{ p.parcelas.forEach(parc=> out.push({paciente:p, parcela:parc})); });
+  return out;
+}
+function statusParcela(parc){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const venc = parseISO(parc.vencimento);
+  if(parc.pago) return 'paid';
+  if(venc < hoje) return 'overdue';
+  if(mesmoDia(venc,hoje)) return 'today';
+  return 'upcoming';
+}
+
+function cardParcelaHTML(paciente, parcela){
+  const st = statusParcela(parcela);
+  const badgeTxt = st==='overdue' ? '⚠️ Atrasado' : st==='today' ? '📌 Vence hoje' : st==='paid' ? '✅ Pago' : '📅 A vencer';
+  return `
+    <div class="pcard ${st}">
+      <div class="pcard-top">
+        <div>
+          <div class="pcard-name">${paciente.nome}</div>
+          <div class="pcard-sub">${paciente.tratamento||'Parcelamento'} · Parcela ${parcela.numero}/${paciente.parcelas.length} · ${fmtData(parseISO(parcela.vencimento))}</div>
+          <span class="badge ${st}">${badgeTxt}</span>
+        </div>
+        <div class="pcard-value">${fmtMoeda(parcela.valor)}</div>
+      </div>
+      <div class="pcard-actions">
+        <button class="btn-wpp" onclick="enviarWhatsapp('${paciente.id}',${parcela.numero})">📲 Cobrar no WhatsApp</button>
+        <button class="btn-pay ${parcela.pago?'done':''}" onclick="marcarPago('${paciente.id}',${parcela.numero})">${parcela.pago?'✔ Pago':'Marcar pago'}</button>
+      </div>
+    </div>`;
+}
+
+/* ---------- render: aba por data ---------- */
+function renderPorData(){
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  document.getElementById('dataAtualLabel').textContent = mesmoDia(dataAtual,hoje) ? 'Hoje' : fmtDataLonga(dataAtual);
+  document.getElementById('dataAtualSub').textContent = fmtData(dataAtual);
+
+  const all = todasParcelas();
+
+  const atrasados = all.filter(x=>!x.parcela.pago && parseISO(x.parcela.vencimento) < hoje);
+  const hojeList = all.filter(x=>!x.parcela.pago && mesmoDia(parseISO(x.parcela.vencimento),hoje));
+  const em7dias = new Date(hoje); em7dias.setDate(hoje.getDate()+7);
+  const proximos = all.filter(x=>{
+    const v = parseISO(x.parcela.vencimento);
+    return !x.parcela.pago && v > hoje && v <= em7dias;
+  });
+  document.getElementById('sumAtrasados').textContent = atrasados.length;
+  document.getElementById('sumHoje').textContent = hojeList.length;
+  document.getElementById('sumProximos').textContent = proximos.length;
+
+  const listaAtrasadosEl = document.getElementById('listaAtrasados');
+  listaAtrasadosEl.innerHTML = atrasados.length ?
+    `<div class="section-label">⚠️ Atrasados (${atrasados.length})</div>` +
+    atrasados.sort((a,b)=>a.parcela.vencimento.localeCompare(b.parcela.vencimento))
+      .map(x=>cardParcelaHTML(x.paciente,x.parcela)).join('')
+    : '';
+
+  const doDia = all.filter(x=> mesmoDia(parseISO(x.parcela.vencimento), dataAtual) );
+  const listaDoDiaEl = document.getElementById('listaDoDia');
+  const labelDia = mesmoDia(dataAtual,hoje) ? 'Vencem hoje' : `Vencem em ${fmtData(dataAtual)}`;
+  listaDoDiaEl.innerHTML = doDia.length ?
+    `<div class="section-label">${labelDia} (${doDia.length})</div>` + doDia.map(x=>cardParcelaHTML(x.paciente,x.parcela)).join('')
+    : `<div class="empty"><div class="ic">🗓️</div>Nenhuma parcela vence nesta data.</div>`;
+}
+
+/* ---------- render: aba por paciente ---------- */
+let expandidos = new Set();
+function toggleExpand(id){
+  if(expandidos.has(id)) expandidos.delete(id); else expandidos.add(id);
+  renderPacientes();
+}
+function renderPacientes(){
+  const busca = (document.getElementById('buscaPaciente').value||'').toLowerCase();
+  const lista = document.getElementById('listaPacientes');
+  const filtrados = pacientes.filter(p=>p.nome.toLowerCase().includes(busca)).sort((a,b)=>a.nome.localeCompare(b.nome));
+
+  if(!filtrados.length){
+    lista.innerHTML = `<div class="empty"><div class="ic">👤</div>Nenhum paciente encontrado.</div>`;
+    return;
+  }
+
+  lista.innerHTML = filtrados.map(p=>{
+    const pagas = p.parcelas.filter(x=>x.pago).length;
+    const total = p.parcelas.length;
+    const pct = total? Math.round(pagas/total*100):0;
+    const temAtraso = p.parcelas.some(x=>statusParcela(x)==='overdue');
+    const aberto = expandidos.has(p.id);
+    return `
+      <div class="plist-card">
+        <div class="plist-head" onclick="toggleExpand('${p.id}')">
+          <div class="l">
+            <div class="name">${p.nome} ${temAtraso?'⚠️':''}</div>
+            <div class="meta">${pagas}/${total} parcelas pagas · ${p.tratamento||'—'}</div>
+            <div class="plist-progress"><i style="width:${pct}%"></i></div>
+          </div>
+          <div class="chev">${aberto?'▲':'▼'}</div>
+        </div>
+        <div class="plist-body ${aberto?'open':''}">
+          ${p.parcelas.map(parc=>{
+            const st = statusParcela(parc);
+            const cor = st==='overdue'?'color:var(--red-600);font-weight:700;':st==='today'?'color:var(--amber-600);font-weight:700;':'';
+            return `<div class="parcela-row">
+              <div class="pn" style="${cor}">Parcela ${parc.numero} · ${fmtData(parseISO(parc.vencimento))}</div>
+              <div class="actions">
+                <div class="pv">${fmtMoeda(parc.valor)}</div>
+                <button class="mini-btn wpp" onclick="enviarWhatsapp('${p.id}',${parc.numero})">📲</button>
+                <button class="mini-btn pay ${parc.pago?'done':''}" onclick="marcarPago('${p.id}',${parc.numero})">${parc.pago?'✔':'Pagar'}</button>
+              </div>
+            </div>`;
+          }).join('')}
+          <div class="plist-actions">
+            <button class="btn-edit" onclick="abrirModalEditar('${p.id}')">✏️ Editar</button>
+            <button class="btn-del" onclick="excluirPaciente('${p.id}')">🗑️ Excluir</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ---------- render geral ---------- */
+function renderTudo(){
+  renderPorData();
+  renderPacientes();
+}
+
+carregarLocal();
+renderTudo();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
