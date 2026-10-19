@@ -1,4 +1,4 @@
-const CACHE = 'parcelamentos-v1';
+const CACHE = 'parcelamentos-v2';
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e=>{
